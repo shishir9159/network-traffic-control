@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: klovercloud-queue
+  namespace: klovercloud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: klovercloud-queue
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 0
+  minReadySeconds: 25
+  template:
+    metadata:
+      labels:
+        app: klovercloud-queue
+    spec:
+      terminationGracePeriodSeconds: 15
+      containers:
+      - name: klovercloud-queue
+        imagePullPolicy: Always
+        image: klovercloud/service:queue-v0.2.0
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        envFrom:
+          - secretRef:
+               name: mongodb-replicaset-admin-secret
+          - configMapRef:
+               name: klovercloud-queue-envar-config
+          - secretRef:
+              name: klovercloud-system-user
+      serviceAccount: klovercloud-default-sa
+      imagePullSecrets:
+        - name: regcred-dh
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: klovercloud-queue
+  name: klovercloud-queue
+  namespace: klovercloud
+spec:
+  ports:
+    - name: http-rest
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: klovercloud-queue
+  type: ClusterIP
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  name: klovercloud-queue
+  namespace: klovercloud
+spec:
+  rules:
+    - host: queue.console.klovercloud.io
+      http:
+        paths:
+          - backend:
+              serviceName: klovercloud-queue
+              servicePort: 80
+            path: /
+  tls:
+    - hosts:
+        - queue.console.klovercloud.io
+      secretName: wild-certificate-secret

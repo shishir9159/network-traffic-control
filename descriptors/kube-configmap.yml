@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: klovercloud-queue-envar-config
+  namespace: klovercloud
+data:
+  RUN_MODE: "PRODUCTION"
+  MESSAGE_PUBLISHER_SERVICE_URL: "http://klovercloud-message-publisher"
+  MANAGEMENT_SERVICE_URL: "http://klovercloud-management"
+  KAFKA_BROKER: "kc-kafka-cluster-kafka-bootstrap:9092"
+  DATABASE_NAME: "klovercloud_queue"
+  MONGO_PORT: "27017"
+  MONGO_SERVER: "kcprod-mongodb-0.kcprod-mongodb-svc.klovercloud.svc.cluster.local"
+  SERVER_PORT: "8080"
+  TOPIC_QUEUE_DEPLOYMENT_EVENT: "kt-queue-live-log"
+  CONSUMER_GROUP_QUEUE_DEPLOYMENT_EVENT: "cg-queue-live-log"
