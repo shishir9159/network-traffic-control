@@ -1,0 +1,25 @@
+[package]
+name = "network-traffic-control"
+version = "0.0.1"
+edition = "2021"
+authors = ["shishir9159 <nahidhasan43@iut-dhaka.edu>"]
+license = "MIT"
+repository = "https://github.com/shishir9159/queue"
+description = ""
+
+[dependencies]
+tokio = { workspace = true }
+clap = { workspace = true }
+anyhow = { workspace = true }
+futures = { workspace = true }
+pin-project = { workspace = true }
+humantime = { workspace = true }
+rand = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+bytes = { workspace = true }
+socket2 = { workspace = true }
+smallvec = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["full", "test-util"] }
