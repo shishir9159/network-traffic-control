@@ -22,10 +22,6 @@ pub struct ReadInjector<T> {
 }
 
 impl<T> ReadInjector<T> {
-    /// Wraps `inner` and delivers queued payloads from `inject_rx` as extra reads.
-    ///
-    /// Callers retain the sending end of the channel and push payloads whenever they want the next
-    /// read on `ReadInjector` to observe synthetic bytes.
     pub fn new(inner: T, inject_rx: mpsc::Receiver<Bytes>) -> Self {
         Self {
             inner,
@@ -79,7 +75,7 @@ impl<R: AsyncRead + Unpin> AsyncRead for ReadInjector<R> {
                     this.buffer.replace(buffer);
                     continue;
                 }
-                Poll::Ready(None) | Poll::Pending => break, // ignore closed or pending channel
+                Poll::Ready(None) | Poll::Pending => break,
             };
         }
 
@@ -123,11 +119,6 @@ impl<RW: fmt::Debug> fmt::Debug for ReadInjector<RW> {
     }
 }
 
-/// Injects [`Bytes`] into the write path of an [`AsyncWrite`] by draining an `mpsc::Receiver`
-/// before forwarding caller-provided buffers.
-///
-/// Injected buffers are written in full (with backpressure respected) prior to the actual write
-/// request that triggered polling.
 #[pin_project]
 pub struct WriteInjector<T> {
     #[pin]
@@ -138,9 +129,6 @@ pub struct WriteInjector<T> {
 }
 
 impl<T> WriteInjector<T> {
-    /// Wraps `inner` and writes queued payloads from `inject_rx` before caller-provided buffers.
-    ///
-    /// Ideal for crafting synthetic frames or fault injections without altering the main writer.
     pub fn new(inner: T, inject_rx: mpsc::Receiver<Bytes>) -> Self {
         Self {
             inner,
@@ -199,7 +187,7 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for WriteInjector<W> {
                     buffer.advance(size);
                 }
 
-                this.buffer.take(); // clear buffer
+                this.buffer.take();
             }
 
             match this.inject_rx.poll_recv(cx) {
@@ -207,7 +195,7 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for WriteInjector<W> {
                     this.buffer.replace(buffer);
                     continue;
                 }
-                Poll::Ready(None) | Poll::Pending => break, // ignore closed or not ready channel
+                Poll::Ready(None) | Poll::Pending => break,
             };
         }
 
@@ -231,7 +219,6 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for WriteInjector<W> {
         cx: &mut Context<'_>,
         bufs: &[io::IoSlice<'_>],
     ) -> Poll<io::Result<usize>> {
-        // TODO: implement
         self.project().inner.poll_write_vectored(cx, bufs)
     }
 }
